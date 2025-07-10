@@ -39,7 +39,7 @@ bibliography: paper.bib
 Learning analytics is a scientific field created in response to the need for deriving meaningful insights from learning process data, 
 to understand how learning occurs and to optimize learning design [@gavsevic2015let]. **HINA** is a learning analytics tool that 
 models and analyzes the relationships among different types of learning process data to uncover hidden learning strategies, 
-provide learning performance indices, identify clusters, and generate dashboard visualizations.  
+provide learning performance indices, identify clusters, and generate dashboard visualizations. Explore the web-based HINA tool at: hina-network.com 
 
 **Heterogenous interactions** refer to the connections that occur between different types of entities during learning processes, 
 such as students’ interactions with learning objects [@feng2025analyzing] or students’ affiliations with different 
@@ -116,7 +116,7 @@ provides a more specialized experience than existing packages for general networ
 
 - **Dashboard deployment** (hina.app) 
   - Provides functions to deploy a dashboard that includes a web-based interface serving multiple purposes.
-    1. The dashboard serves as a web-based tool for conducting learning analytics with HINA using an intuitive user interface,
+    1. The dashboard serves as a web-based tool for conducting learning analytics with HINA using an intuitive user interface (hina-network.com),
        enabling users to conduct the individual-, dyadic-, and mesoscale-level analysis available in the package without any programming.
     2. The dashboard also allows teachers and students to visualize, interpret, and communicate HINA results effectively.
     
