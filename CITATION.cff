@@ -3,16 +3,16 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: Feng
     given-names: Shihui
-    orcid: https://orcid.org/0000-0002-5572-276X
+    orcid: "https://orcid.org/0000-0002-5572-276X"
   - family-names: He
     given-names: Baiyue
-    orcid: https://orcid.org/0009-0007-9787-9726
+    orcid: "https://orcid.org/0009-0007-9787-9726"
   - family-names: Kirkley
     given-names: Alec
-    orcid: https://orcid.org/0000-0001-9966-0807
+    orcid: "https://orcid.org/0000-0001-9966-0807"
 title: "HINA: A Learning Analytics Tool for Heterogenous Interaction Network Analysis in Python"
 version: 0.6.7
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.15940279
+    value: 10.5281/zenodo.15940278
 date-released: 2025-07-16
