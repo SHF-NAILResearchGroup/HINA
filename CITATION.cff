@@ -1,18 +1,26 @@
 cff-version: 1.2.0
+title: "HINA: A Learning Analytics Tool for Heterogenous Interaction Network Analysis in Python"
+version: 1.4           
+license: "MIT"     
+type: software
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: Feng
-    given-names: Shihui
+  - given-names: Shihui
+    family-names: Feng
+    affiliation: >
+      Faculty of Education, University of Hong Kong; Institute of Data
+      Science, University of Hong Kong
     orcid: "https://orcid.org/0000-0002-5572-276X"
-  - family-names: He
-    given-names: Baiyue
+  - given-names: Baiyue
+    family-names: He
+    affiliation: "Institute of Data Science, University of Hong Kong"
     orcid: "https://orcid.org/0009-0007-9787-9726"
-  - family-names: Kirkley
-    given-names: Alec
+  - given-names: Alec
+    family-names: Kirkley
+    affiliation: >
+      Institute of Data Science, University of Hong Kong; Department of
+      Urban Planning and Design, University of Hong Kong; Urban Systems
+      Institute, University of Hong Kong
     orcid: "https://orcid.org/0000-0001-9966-0807"
-title: "HINA: A Learning Analytics Tool for Heterogenous Interaction Network Analysis in Python"
-version: 0.6.7
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.15940278
+doi: 10.5281/zenodo.15940278
 date-released: 2025-07-16
