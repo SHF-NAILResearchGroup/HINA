@@ -6,6 +6,8 @@ HINA is a learning analytics tool that models and analyzes heterogenous interact
 
 **Heterogenous interaction network analysis (HINA)** offers a flexible, adaptive, and widely applicable method to model a wide variety of interactions that can occur during the learning processes, across individual learning, group learning, and community learning. 
 
+To access the [HINA Web Tool](https://hina-network.com). No programming required to use the web interface.
+
 ![Examples of heterogenous interaction networks for learning in HINA.](./Paper/Examples.png "Examples of heterogenous interaction networks for learning in HINA.")
 
 
