@@ -1,10 +1,10 @@
 # `HINA`: A Learning Analytics Tool for `H`eterogenous `I`nteraction `N`etwork `A`nalysis in Python 
 
-HINA is a learning analytics tool that models and analyzes heterogenous interactions in learning processes. Heterogenous interactions refer to the interactions occurring between different types of entities during learning processes, such as students’ interactions with learning objects or students’ display of different behaviors coded using multimodal process data. 
+HINA is a learning analytics tool that models and analyzes heterogeneous interactions in learning processes. Heterogeneous interactions refer to the interactions occurring between different types of entities during learning processes, such as students’ interactions with learning objects or students’ display of different behaviors coded using multimodal process data. 
 
-**Heterogenous interaction networks (HINs)** consist of different sets of nodes and edges connecting nodes from different sets. Each node in a heterogenous interaction network (HIN) can represent any meaningful entity reflecting a certain object or construct in a learning process, such as a student, group of students, coded behavior, or learning artefact. Edges in HINs pair nodes from different sets and can reflect affiliations, associations, or interactions among the nodes for modeling a specific learning process.
+**Heterogeneous interaction networks (HINs)** consist of different sets of nodes and edges connecting nodes from different sets. Each node in a heterogeneous interaction network (HIN) can represent any meaningful entity reflecting a certain object or construct in a learning process, such as a student, group of students, coded behavior, or learning artefact. Edges in HINs pair nodes from different sets and can reflect affiliations, associations, or interactions among the nodes for modeling a specific learning process.
 
-**Heterogenous interaction network analysis (HINA)** offers a flexible, adaptive, and widely applicable method to model a wide variety of interactions that can occur during the learning processes, across individual learning, group learning, and community learning. 
+**Heterogeneous interaction network analysis (HINA)** offers a flexible, adaptive, and widely applicable method to model a wide variety of interactions that can occur during the learning processes, across individual learning, group learning, and community learning. 
 
 To access the [HINA Web Tool](https://hina-network.com). No programming required to use the web interface.
 
@@ -75,7 +75,7 @@ Then, open the web browser and navigate to `http://localhost:8080` to access the
 
 ### <a id="hina.mesoscale">[hina.mesoscale](https://hina.readthedocs.io/en/latest/Modules/mesoscale.html)
 
-- **Mesoscale Clustering**: Provides methods for clustering nodes in a heterogeneous interaction network according to shared interaction structure, to automatically learn the number of clusters from heterogeneity in the interaction data to find a mesoscale representation. Utilizes a novel method based on data compression for parsimonious inference. If the input is a tripartite representation of heterogeneous interaction network, the function also returns the projected bipartite networks of the related constructs of individuals within each cluster.  
+- **Mesoscale Clustering**: Provides methods for clustering nodes in a heterogeneous interaction network according to shared interaction structure, to automatically learn the number of clusters from heterogeneity in the interaction data to find a mesoscale representation. Utilizes a novel method based on data compression for parsimonious inference. If the input is a tripartite representation of a heterogeneous interaction network, the function also returns the projected bipartite networks of the related constructs of individuals within each cluster.  
 
 ### <a id="hina.visualization">[hina.visualization](https://hina.readthedocs.io/en/latest/Modules/visualization.html)
 
@@ -104,6 +104,14 @@ Detailed documentation for each module and function is available at the link bel
 ## License 
 Distributed under the MIT License. See LICENSE for more information.
 
+## Reference 
+When using the package, please cite: 
+Feng et al., (2025). HINA: A Learning Analytics Tool for Heterogenous Interaction Network Analysis in Python. Journal of Open Source Software, 10(111), 8299, https://doi.org/10.21105/joss.08299
+
+## Acknolwedgement
+
+This work was funded by Research Grants Council (Hong Kong) under Early Career Scheme (Grant/Award Number: #27605223) and the Institute of Data Science under Research Seed Fund at the University of Hong Kong. 
+ 
 ## Layout
 ```bash
 
