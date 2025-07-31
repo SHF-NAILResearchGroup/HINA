@@ -104,16 +104,17 @@ def plot_hina(B, layout='bipartite', group_name = [None, None], pruning_kwargs=N
 
     # Plot the graph
     plt.figure(figsize=(12, 12))
-    nx.draw(
-        B,
-        pos,
-        with_labels=False,
-        node_color=node_colors,
-        width=edge_widths,
-        node_size=200,
-        **NetworkX_kwargs
-    )
-
+    
+    draw_kwargs = {
+    'with_labels': False,
+    'node_color': node_colors,  
+    'width': edge_widths,     
+    'node_size': 200,     
+    **NetworkX_kwargs          
+    }
+    
+    nx.draw(B, pos, **draw_kwargs)
+    
     # Add labels
     for node, (x, y) in pos.items():
         label = str(node)
