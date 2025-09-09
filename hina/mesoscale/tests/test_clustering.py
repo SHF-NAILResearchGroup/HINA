@@ -8,7 +8,7 @@ def create_test_graph():
 	# Create a test graph directly with NetworkX
 	B = nx.Graph()
 	B.add_nodes_from(['Alice', 'Bob', 'Charlie'], bipartite='student', group=['A', 'B', 'B'])
-	B.add_nodes_from(['ask questions', 'answer questions', 'evaluating', 'monitoring'], bipartite='object', attr=['cognitive', 'cognitive', 'metacognitive', 'metacognitive'])
+	B.add_nodes_from(['ask questions', 'answer questions', 'evaluating', 'monitoring'], bipartite='object', attr=['cognitive', 'cognitive', 'metacognitive', 'metacognitive']) 
 	B.add_weighted_edges_from([
 		('Alice', 'ask questions', 2),
 		('Alice', 'evaluating', 1),
