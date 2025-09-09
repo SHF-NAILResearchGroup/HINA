@@ -44,14 +44,14 @@ def test_hina_communities():
 	assert isinstance(results, dict)
 	assert 'number of communities' in results
 	assert 'node communities' in results
-	assert 'community structure quality value' in results
+	assert 'community quality (compression ratio)' in results
 	assert 'updated graph object' in results
 	assert 'sub graphs for each community' in results
 	
 	# Validate the types of returned values
 	assert isinstance(results['number of communities'], int)
 	assert isinstance(results['node communities'], dict)
-	assert isinstance(results['community structure quality value'], float)
+	assert isinstance(results['community quality (compression ratio)'], float)
 	assert isinstance(results['updated graph object'], nx.Graph)
 	
 	# Ensure sub graphs exist for each community
@@ -68,7 +68,7 @@ def test_hina_communities_from_df():
 	assert isinstance(results, dict)
 	assert 'number of communities' in results
 	assert 'node communities' in results
-	assert 'community structure quality value' in results
+	assert 'community quality (compression ratio)' in results
 	assert 'updated graph object' in results
 	assert 'sub graphs for each community' in results
 	
@@ -87,7 +87,7 @@ def test_hina_communities_fixed():
 	assert isinstance(results, dict)
 	assert 'number of communities' in results
 	assert 'node communities' in results
-	assert 'community structure quality value' in results
+	assert 'community quality (compression ratio)' in results
 	assert 'updated graph object' in results
 	assert 'sub graphs for each community' in results
 	
@@ -116,11 +116,11 @@ def test_compression_ratio():
 	
 	# Run with optimal number of communities
 	results_no_fix = hina_communities(B)
-	optimal_quality = results_no_fix['community structure quality value']
+	optimal_quality = results_no_fix['community quality (compression ratio)']
 	
 	# Run with a forced smaller number of communities
 	results_fix = hina_communities(B, fix_B=2)
-	fixed_quality = results_fix['community structure quality value']
+	fixed_quality = results_fix['community quality (compression ratio)']
 	
 	# When forcing fewer communities than optimal, MDL objective should increase as a worse compression
 	assert fixed_quality >= optimal_quality
