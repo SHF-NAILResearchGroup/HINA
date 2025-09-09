@@ -11,7 +11,7 @@ def hina_communities(G,fix_B=None):
 
 	This function partitions the nodes of a bipartite graph into communities by minimizing the MDL objective,
 	which balances the complexity of the community structure with the accuracy of representing the graph.
-	The function supports fixing the number of communities (`fix_B`) and can handle tripartite networks.
+	The function supports fixing the number of communities (`fix_B`) and can handle tripartite networks. 
 
 	Parameters:
 	-----------
