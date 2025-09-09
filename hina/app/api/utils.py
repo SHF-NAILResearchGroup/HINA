@@ -311,7 +311,7 @@ def build_clustered_network(df: pd.DataFrame, group_col: str, student_col: str, 
     cluster_result = hina_communities(nx_G, fix_B=number_cluster)
     # print('cluster_result', cluster_result)
     cluster_labels = cluster_result['node communities']
-    compression_ratio = cluster_result['community structure quality value']
+    compression_ratio = cluster_result['community quality (compression ratio)']
     
     object_object_graphs = {}
     if 'object-object graphs for each community' in cluster_result:
