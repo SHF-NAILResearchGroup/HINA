@@ -29,7 +29,7 @@ def hina_communities(G,fix_B=None):
 		A dictionary containing the following keys:
 		- 'number of communities': The number of communities identified.
 		- 'node communities': A dictionary mapping each node to its community label.
-		- 'community structure quality value': A measure of how well the inferred communities compress
+		- 'community quality (compression ratio)': A measure of how well the inferred communities compress
 		  the network structure, calculated as the compression ratio (description length / naive description length).
 		- 'updated graph object': The input graph with an added 'communities' attribute for each node.
 		- 'sub graphs for each community': A dictionary where keys are community labels and values are subgraphs of nodes
