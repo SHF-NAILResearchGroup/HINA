@@ -117,12 +117,12 @@ def hina_communities(G,fix_B=None):
 				dF = merge_dF(c1,c2)
 				heapq.heappush(past_merges,(dF,(c1,c2)))
 
-	H0 = C(N1) + sum(F(r) for r in cluster2nodes)
+	HN1 = C(N1) + sum(F(r) for r in cluster2nodes)
 	Hs,past_partitions = [],[]
-	Hs.append(H0)
+	Hs.append(HN1)
 	past_partitions.append(node2cluster.copy())
 
-	B,H = N1,H0
+	B,H = N1,HN1
 	while B > 1:
 
 		dF,pair = heapq.heappop(past_merges)
@@ -152,6 +152,8 @@ def hina_communities(G,fix_B=None):
 		best_ind = np.argmin(Hs)
 	else:
 		best_ind = len(Hs)-fix_B
+
+	H0 = Hs[-1]
 	Hmdl = Hs[best_ind]
 	community_labels = past_partitions[best_ind]
 	old_labels = list(set(community_labels.values()))
@@ -225,11 +227,11 @@ def hina_communities(G,fix_B=None):
 		
 	if any(j.get('tripartite') == True for i, j in G.nodes(data=True)):
 			results = {'number of communities': len(set(community_labels.values())), \
-			   "node communities": community_labels, "community structure quality value":1-Hmdl/H0,\
+			   "node communities": community_labels, "community quality (compression ratio)":Hmdl/H0,\
 			   'updated graph object':G, 'sub graphs for each community':sub_Gs, 'object-object graphs for each community': sub_Gs_object}
 	else:
 		results = {'number of communities': len(set(community_labels.values())), \
-			   "node communities": community_labels, "community structure quality value":Hmdl/H0,\
+			   "node communities": community_labels, "community quality (compression ratio)":Hmdl/H0,\
 			   'updated graph object':G, 'sub graphs for each community':sub_Gs}
 	
 	return results
