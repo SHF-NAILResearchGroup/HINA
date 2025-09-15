@@ -135,9 +135,8 @@ def plot_hina(B, layout='bipartite', group_name = [None, None], pruning_kwargs=N
         plt.show()
 
 
-
 def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None, None],\
-                          pruning_kwargs=None, NetworkX_kwargs=None):
+                          pruning_kwargs=None, NetworkX_kwargs=None, weight_scaler = 1.):
 
     """
     Visualizes a projected one-mode network based on the defined nodeset in a B with circular layout, node grouping, and edge pruning.
@@ -186,6 +185,9 @@ def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None
         - 'with_labels': bool - Whether to show node labels (default: True)
         - 'edge_color': str - Edge color (default: 'gray')
         - 'alpha': float - Transparency (default: 0.7)
+    weight_scaler : float, optional
+        Changes thickness of edge weights.
+        Default value is 1.
 
     Returns:
     --------
@@ -299,6 +301,8 @@ def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None
     plt.margins(0.15)  
     plt.tight_layout()
     plt.show()
+
+ 
 
 
 def plot_bipartite_clusters(G, noise_scale=3, radius=20., encode_labels=False,
