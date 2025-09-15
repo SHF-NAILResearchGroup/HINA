@@ -273,6 +273,7 @@ Source Code
 .. _plot-hina-projection:
 
 .. code-block:: python
+    
     def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None, None],
                           pruning_kwargs=None, NetworkX_kwargs=None, weight_scaler = 1.):
 
