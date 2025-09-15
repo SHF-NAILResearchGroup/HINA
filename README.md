@@ -82,7 +82,8 @@ Then, open the web browser and navigate to `http://localhost:8080` to access the
 - **Visualization**: Provides network visualization functionalities for heterogeneous interaction networks.
     Users can generate a customizable network visualization using a specified layout, allowing for the pruning of insignificant edges,
     grouping of nodes based on engagement patterns, and customization of the graph's appearance.
-    Users can also visualize HINs with a novel community-based layout, emphasizing the underlying bipartite community structure.
+    Users can visualize HINs with a novel community-based layout, emphasizing the underlying bipartite community structure.
+    Users can also visualize a projected one-mode network based on the defined nodeset in a constructed HIN. 
   
 ### <a id="hina.app">[hina.app](https://hina.readthedocs.io/en/latest/Modules/dashboard.html)
 
