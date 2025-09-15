@@ -141,8 +141,8 @@ def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None
     """
     Visualizes a projected one-mode network based on the defined nodeset in a B with circular layout, node grouping, and edge pruning.
 
-    This function creates a visualization of a projected bipartite graph `B` based on the designated nodeset using a circular layout. The edge weights are convereted in the 
-    projected network. It supports the projection of a pruned bipartite network B based on statistical significance, projected a certain group of nodes, and customizing
+    This function creates a visualization of a projected bipartite graph `B` based on the designated nodeset using a circular layout. Edge weights reflect the similarity of the interaction profiles of the defined nodeset.
+    It supports the projection of a pruned bipartite network B based on statistical significance, projected a certain group of nodes, and customizing
     the appearance of the graph using NetworkX visualization parameters.
 
     Parameters:
