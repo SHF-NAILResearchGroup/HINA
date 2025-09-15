@@ -269,3 +269,173 @@ Source Code
             nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 
         plt.show()
+
+.. _plot-hina-projection:
+
+.. code-block:: python
+    def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None, None],
+                          pruning_kwargs=None, NetworkX_kwargs=None, weight_scaler = 1.):
+
+    """
+    Visualizes a projected one-mode network based on the defined nodeset in a B with circular layout, node grouping, and edge pruning.
+
+    This function creates a visualization of a projected bipartite graph `B` based on the designated nodeset using a circular layout. Edge weights reflect the similarity of the interaction profiles of the defined nodeset.
+    It supports the projection of a pruned bipartite network B based on statistical significance, projected a certain group of nodes, and customizing
+    the appearance of the graph using NetworkX visualization parameters.
+
+    Parameters:
+    -----------
+    B : networkx.Graph
+        Nodes must have a 'bipartite' attribute indicating their partition.
+        If using HINA to analyze tripartite networks, it is recommended to visualize the object-object graphs for 
+        each community after detecting communities with hina_communities(). These projected graphs represent 
+        relationships between objects within each community and provide additional insights into the 
+        structure and interactions of the network.
+    nodeset: the desginated nodeset in B, normally is the same as the column name while constructing the B. e.g. 'coded behaviors'. 
+    This is in the value of the bipartite node attribute ['bipartite']
+    layout : str, optional
+        The layout to use for node positioning. Supported layouts are:
+        - 'circular': Nodes are arranged in a circle (default).
+        - 'spring': Force-directed layout for a visually appealing arrangement.
+    group_name : list, optional
+        AA list of two elements specifying the node attribute and its corresponding value to filter nodes 
+        for visualization. The first element is the name of the node attribute (e.g., 'group'), 
+        which corresponds to a column in the input dataframe. The second element is the specific value of the 
+        attribute (e.g., 'A'), used to filter nodes. Only nodes with this attribute value will be included 
+        in the visualization. For example, ['group', 'A'] will include only nodes where the 'group' attribute is 'A'.
+        Default is `[None, None]`, which includes all nodes.
+    pruning_kwargs : dict, optional
+        A dictionary of parameters for pruning edges based on statistical significance. 
+        If provided, the prune_edges function is called to remove edges that are not 
+        statistically significant before visualization. For example, {'fix_deg': 'students'} 
+        specifies that the degrees of the 'students' node set should be fixed during pruning. 
+        Default is `None`, which skips pruning.
+    NetworkX_kwargs : dict, optional
+        Additional keyword arguments for customizing the NetworkX visualization (e.g., node size, edge color).
+        Default is `None`.
+        
+        Additional keyword arguments to customize NetworkX visualization. Overrides default 
+        styling. Common options include:
+        - 'node_size': int - Size of nodes (default: 300)
+        - 'node_color': str - Node fill color (default: '#2E86AB' - blue)
+        - 'edgecolors': str - Node border color (default: '#A23B72' - purple)  
+        - 'font_size': int - Label font size (default: 8)
+        - 'with_labels': bool - Whether to show node labels (default: True)
+        - 'edge_color': str - Edge color (default: 'gray')
+        - 'alpha': float - Transparency (default: 0.7)
+    weight_scaler : float, optional
+        Changes thickness of edge weights.
+        Default value is 1.
+
+    Returns:
+    --------
+        Displays a plot of a projected one-mode network based on the defined nodeset in a B with circular layout.
+    """
+    if NetworkX_kwargs is None:
+        NetworkX_kwargs = {}
+
+    # Prune edges if pruning_kwargs is provided
+    if pruning_kwargs is not None:
+        B = prune_edges(B, **pruning_kwargs)['pruned network']
+
+    if group_name is not None:
+        
+        G_sub = nx.Graph()
+        u_nodes = [i for i, j in B.nodes(data=True) if j.get(group_name[0]) == group_name[1]]
+        for u_node in u_nodes:
+            G_sub.add_node(u_node, **B.nodes[u_node])
+        v_nodes = set()
+        for u_node in u_nodes:
+            for v_node in B.neighbors(u_node):
+                v_nodes.add(v_node)
+                G_sub.add_node(v_node, **B.nodes[v_node])
+        for u_node in u_nodes:
+            for v_node in B.neighbors(u_node):
+                if B.has_edge(u_node, v_node):
+                    G_sub.add_edge(u_node, v_node, **B.edges[u_node, v_node])
+        B = G_sub
+
+    def create_projection(graph, nodeset):
+
+        projection = nx.Graph()
+        nodes_to_project = [n for n, data in graph.nodes(data=True) 
+                           if data.get('bipartite') == nodeset]
+        
+        projection.add_nodes_from(nodes_to_project)
+        
+        # Add edges based on common neighbors
+        for i, node1 in enumerate(nodes_to_project):
+            for node2 in nodes_to_project[i+1:]:
+                neighbors1 = set(graph.neighbors(node1))
+                neighbors2 = set(graph.neighbors(node2))
+
+                ###old method: count common neighbors to get projection weight
+                # common_neighbors = neighbors1.intersection(neighbors2)
+                
+                # if common_neighbors:
+                #     weight = len(common_neighbors)
+                #     projection.add_edge(node1, node2, weight=weight)
+
+                ####new method: cosine similarity among corresponding rows of weighted adjacency matrix
+                total1,total2 = 0,0
+                for n in neighbors1: total1 += graph[node1][n]['weight']
+                for n in neighbors2: total2 += graph[node2][n]['weight']
+        
+                sim = 0
+                for n in neighbors1:
+                     if n in neighbors2:
+                         sim += (graph[node1][n]['weight']/total1)*(graph[node2][n]['weight']/total2)
+                projection.add_edge(node1, node2, weight=sim)
+                
+        return projection
+
+    # Create the projection
+    G_projected = create_projection(B, target_nodeset)
+
+    plt.figure(figsize=(8, 8))
+    
+    if layout == 'circle':
+        pos = nx.circular_layout(G_projected)
+    elif layout == 'spring':
+        pos = nx.spring_layout(G_projected, k=1/np.sqrt(len(G_projected.nodes())), iterations=50)
+
+    # Set default visualization parameters
+    default_kwargs = {
+        'node_size': 300,
+        'node_color': '#2E86AB',
+        'edgecolors': '#A23B72',
+        'linewidths': 0.5,
+        'width': 1,
+        'edge_color': 'gray',
+        'alpha': 0.7,
+        'with_labels': True,
+        'font_size': 8
+    }
+    
+    # Update with user-provided kwargs
+    default_kwargs.update(NetworkX_kwargs)
+
+    # Set node colors and edge widths
+    nx.draw_networkx_nodes(G_projected, pos, 
+                          node_size=default_kwargs['node_size'],
+                          node_color=default_kwargs['node_color'],
+                          edgecolors=default_kwargs['edgecolors'],
+                          linewidths=default_kwargs['linewidths'])
+
+    # Draw edges with weights
+    edge_widths = [d.get('weight', 1) * weight_scaler for u, v, d in G_projected.edges(data=True)]
+    nx.draw_networkx_edges(G_projected, pos, 
+                          width=edge_widths,
+                          edge_color=default_kwargs['edge_color'],
+                          alpha=default_kwargs['alpha'])
+
+    # Draw labels
+    if default_kwargs['with_labels']:
+        nx.draw_networkx_labels(G_projected, pos, 
+                               font_size=default_kwargs['font_size'])
+
+    plt.title(f"HINA Network Projection - {target_nodeset} Nodeset\n", fontsize=14, pad=20)
+    plt.axis('off')
+    plt.margins(0.15)  
+    plt.tight_layout()
+    plt.show()
