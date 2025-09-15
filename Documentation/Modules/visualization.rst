@@ -10,6 +10,7 @@ Currently, the module contains the `network_visualization.py` file, which includ
 
 - `plot_hina`: Visualizes a bipartite network with customizable layout, optional node filtering, and optional edge pruning.
 - `plot_bipartite_clusters`: Visualizes a bipartite network with community structure by arranging nodes in a circular layout with colors and shapes that reflect cluster memberships.
+- `plot_hina_projection`: Visualizes a projected one-mode network based on the defined nodeset in a constructed HIN with circular layout. The edge weights reflect the similarity of the interaction profiles of the defined nodeset. 
 
 .. list-table:: Functions
    :header-rows: 1
@@ -18,8 +19,10 @@ Currently, the module contains the `network_visualization.py` file, which includ
      - Description
    * - `plot_hina(B, layout='bipartite', group_name=[None, None], pruning_kwargs=None, NetworkX_kwargs=None) <#plot-hina>`_
      - Visualizes a bipartite network with customizable layout, optional node filtering, and edge pruning.
-   * - `plot_bipartite_clusters(G, noise_scale=3, radius=20., encode_labels=False, node_labels=True, edge_labels=False, scale_nodes_by_degree=False, node_scale=2000., node_kwargs={'edgecolors':'black'}, edge_kwargs={'edge_color':'black'}) <#plot-bipartite-clusters>`_
+   * - `plot_bipartite_clusters(B, noise_scale=3, radius=20., encode_labels=False, node_labels=True, edge_labels=False, scale_nodes_by_degree=False, node_scale=2000., node_kwargs={'edgecolors':'black'}, edge_kwargs={'edge_color':'black'}) <#plot-bipartite-clusters>`_
      - Visualizes a bipartite network with community structure; nodes are arranged in a circular layout according to cluster assignments.
+   * - `plot_hina_projection(B,target_nodeset,layout='circle',group_name=[None, None],pruning_kwargs=None,NetworkX_kwargs=None,weight_scaler=1.0) <#plot-hina-projection>`_
+     - Visualizes a projected one-mode network based on the defined nodeset in a constructed HIN; Edge weights reflect the similarity of the interaction profiles of the defined nodeset
 
 Reference
 ---------
@@ -91,6 +94,39 @@ Visualizes a bipartite network with community structure by arranging nodes in a 
 **Returns**:
   - **None**: Displays the network visualization with community grouping.
 
+.. _plot-hina-projection:
+
+.. raw:: html
+
+   <div id="plot-hina-projection" class="function-header">
+       <span class="class-name">function</span> <span class="function-name">plot_hina_projection(B, target_nodeset, layout='circle', group_name=[None, None], pruning_kwargs=None, NetworkX_kwargs=None, weight_scaler=1.0)</span>
+       <a href="../Code/network_visualization.html#plot-hina-projection" class="source-link">[source]</a>
+   </div>
+
+**Description**:
+Visualizes a projected one-mode network based on the defined nodeset in a constructed HIN. The projection creates edges between nodes in the target nodeset based on their similarity of interaction profiles with the other node set. Edge weights reflect the similarity of the interaction profiles.
+
+**Parameters**:
+
+.. raw:: html
+
+   <div class="parameter-block">
+       (B, target_nodeset, layout='circle', group_name=[None, None], pruning_kwargs=None, NetworkX_kwargs=None, weight_scaler=1.0)
+   </div>
+
+   <ul class="parameter-list">
+       <li><span class="param-name">B</span>: A NetworkX graph representing the bipartite network to be visualized.</li>
+       <li><span class="param-name">target_nodeset</span>: A string specifying which node set to project ('student' or 'coded behavior').</li>
+       <li><span class="param-name">layout</span>: A string specifying the layout for node positioning. Options include <code>'circular'</code>, <code>'spring'</code>. Default is <code>'circular'</code>.</li>
+       <li><span class="param-name">group_name</span>: A list of two elements, where the first is the node attribute name (e.g., <code>'group'</code>) and the second is the specific value to filter by (e.g., <code>'Group 1'</code>). Default is <code>[None, None]</code>, meaning all nodes are included.</li>
+       <li><span class="param-name">pruning_kwargs</span>: Optional dictionary of parameters for pruning edges using statistical significance testing before the projection. Default is <code>None</code> (no pruning).</li>
+       <li><span class="param-name">NetworkX_kwargs</span>: Optional dictionary of additional keyword arguments for customizing the NetworkX visualization. Default is <code>None</code>.</li>
+       <li><span class="param-name">weight_scaler</span>: A float value to scale edge weights for visualization purposes. Default is <code>1.0</code>.</li>
+   </ul>
+
+**Returns**:
+  - **None**: Displays the projected network visualization.
+
 Demo
 ====
 
@@ -131,6 +167,12 @@ This example demonstrates how to visualize a heterogeneous interaction network a
 .. code-block:: python
 
     plot_bipartite_clusters(B)
+
+**Step 6: Visualize the projected one-mode network of the constructed HIN based on the object_col nodes**
+
+.. code-block:: python
+
+    plot_hina_project(B,'codes (obj1_col)')
 
 Example Output
 --------------
