@@ -184,11 +184,18 @@ Example Output
 Bipartite network of students and tasks for all groups.
 
 .. image:: Figures/visualization_demo_2.png
-    :alt: Visualization Demo 4
+    :alt: Visualization Demo 2
     :align: center
     :width: 50%
 
 Bipartite clustering network with automatically inferred communities.
+
+.. image:: Figures/visualization_demo_3.png
+    :alt: Visualization Demo 3
+    :align: center
+    :width: 50%
+
+Projected one-mode network of the constructed HIN based on the object_col nodes
 
 Paper Source
 ============
