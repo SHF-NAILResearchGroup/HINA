@@ -231,22 +231,16 @@ def plot_hina_projection (B, target_nodeset, layout='circle', group_name = [None
                 neighbors1 = set(graph.neighbors(node1))
                 neighbors2 = set(graph.neighbors(node2))
 
-                ###old method: count common neighbors to get projection weight
-                # common_neighbors = neighbors1.intersection(neighbors2)
-                
-                # if common_neighbors:
-                #     weight = len(common_neighbors)
-                #     projection.add_edge(node1, node2, weight=weight)
-
-                ####new method: cosine similarity among corresponding rows of weighted adjacency matrix
-                total1,total2 = 0,0
-                for n in neighbors1: total1 += graph[node1][n]['weight']
-                for n in neighbors2: total2 += graph[node2][n]['weight']
+                norm1,norm2 = 0,0
+                for n in neighbors1: norm1 += graph[node1][n]['weight']**2
+                for n in neighbors2: norm2 += graph[node2][n]['weight']**2
+                norm1,norm2 = np.sqrt(norm1),np.sqrt(norm2)
         
                 sim = 0
                 for n in neighbors1:
                      if n in neighbors2:
-                         sim += (graph[node1][n]['weight']/total1)*(graph[node2][n]['weight']/total2)
+                         sim += graph[node1][n]['weight']*graph[node2][n]['weight']
+                sim /= norm1*norm2
                 projection.add_edge(node1, node2, weight=sim)
                 
         return projection
