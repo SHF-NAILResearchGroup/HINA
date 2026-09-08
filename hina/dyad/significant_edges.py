@@ -1,5 +1,7 @@
 import scipy.stats as stats
-import networkx as nx 
+import networkx as nx
+from hina.utils import split_node_sets
+
 def prune_edges(B,fix_deg='None',alpha=0.05):
     """
     Prunes edges in a bipartite graph to retain only those that are statistically significant under a null model.
@@ -11,7 +13,9 @@ def prune_edges(B,fix_deg='None',alpha=0.05):
     Parameters:
     -----------
     B : networkx.Graph
-        A bipartite graph with weighted edges. Nodes are expected to have a 'bipartite' attribute indicating their partition.
+        A bipartite graph with weighted edges. Every node must have a 'bipartite' attribute indicating its partition
+        (as written by `hina.construction.get_bipartite`/`get_tripartite`); the two node sets, and hence the null model,
+        are determined from this attribute.
     fix_deg : str, optional
         Specifies the node set whose degrees are fixed in the null model.  For example, if analyzing student 
         involvement in tasks B(student, tasks), you might fix the degrees of the 'student' node set. 
@@ -40,7 +44,11 @@ def prune_edges(B,fix_deg='None',alpha=0.05):
 
         return set(G_info)
 
-    set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
+    # The two node sets are identified from the 'bipartite' node attribute rather than from the
+    # position of each node in the edge tuples returned by networkx: that position reflects node
+    # insertion order, not node type, so it is arbitrary for graphs that were not built with all
+    # nodes of one set inserted first (e.g. the per-community projections from hina.mesoscale).
+    set1,set2 = split_node_sets(B)
     N1,N2 = len(set1),len(set2)
 
     if fix_deg in ["None", "none", "null", "undefined", "", None]:

@@ -12,19 +12,19 @@ Source Code
     import networkx as nx
     from collections import Counter
     from collections import defaultdict
-
+    from hina.utils import split_node_sets
 
 .. _hina-communities:
 
 .. code-block:: python
 
-    def hina_communities(G,fix_B=None):
+    def hina_communities(G,fix_B=None,focal=None):
         """
         Identifies bipartite communities in a graph by optimizing a Minimum Description Length (MDL) objective.
 
         This function partitions the nodes of a bipartite graph into communities by minimizing the MDL objective,
         which balances the complexity of the community structure with the accuracy of representing the graph.
-        The function supports fixing the number of communities (`fix_B`) and can handle tripartite networks.
+        The function supports fixing the number of communities (`fix_B`) and can handle tripartite networks. 
 
         Parameters:
         -----------
@@ -35,6 +35,10 @@ Source Code
         fix_B : int or str, optional
             If specified, fixes the number of communities to this value. If `None`, the function automatically
             determines the optimal number of communities. Default is `None`.
+        focal : hashable, optional
+            The value of the 'bipartite' attribute identifying the node set to cluster (e.g. 'student'). If `None`,
+            the non-tripartite node set is clustered for tripartite graphs, and otherwise the node set of the first
+            node in `G` (i.e. the set that was inserted first, as done by `get_bipartite`). Default is `None`.
 
         Returns:
         --------
@@ -42,30 +46,23 @@ Source Code
             A dictionary containing the following keys:
             - 'number of communities': The number of communities identified.
             - 'node communities': A dictionary mapping each node to its community label.
-            - 'community structure quality value': A measure of how well the inferred communities compress
-            the network structure, calculated as the compression ratio (description length / naive description length).
+            - 'community quality (compression ratio)': A measure of how well the inferred communities compress
+              the network structure, calculated as the compression ratio (description length / naive description length).
             - 'updated graph object': The input graph with an added 'communities' attribute for each node.
             - 'sub graphs for each community': A dictionary where keys are community labels and values are subgraphs of nodes
-            belonging to that community.
+              belonging to that community.
             - 'object-object graphs for each community' (only for tripartite networks): A dictionary where keys
-            are community labels and values are projected graphs representing relationships between objects
-            within each community. 
+              are community labels and values are projected graphs representing relationships between objects
+              within each community. 
         """
-        G_info = set([(i,j,w['weight'])for i,j,w in G.edges(data=True)])
+        # The clustered (focal) node set and the target node set are identified from the 'bipartite'
+        # node attribute, not from the position of each node in the edge tuples returned by networkx
+        # (that position reflects node insertion order, not node type). The focal set is the student
+        # set for tripartite graphs and otherwise the set of the first node in G, unless `focal` is given.
+        set1,set2 = split_node_sets(G, focal=focal)
+        # orient every edge as (focal node, target node, weight)
+        G_info = set([(i,j,w['weight']) if i in set1 else (j,i,w['weight']) for i,j,w in G.edges(data=True)])
 
-        v = set()
-        node_bipartite_list = [x for x in [data['bipartite'] for n, data in G.nodes(data=True)]\
-                        if not (x in v or v.add(x))]
-        # if fix_B == None:
-        #     set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-        #     print('set1,set2',set1,set2)
-        # elif fix_B == node_bipartite_list[0]:
-        #     set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-        # elif fix_B == node_bipartite_list[1]:
-        #     set2,set1 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-        set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-
-        
         N1,N2 = len(set1),len(set2)
         W = sum([e[2] for e in G_info])
 
@@ -77,16 +74,6 @@ Source Code
             c = node2cluster[i]
             if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
             cluster2weights[c][j] += w
-            # if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
-            # cluster2weights[c][j] += w
-            # if fix_B != node_bipartite_list[1]:
-                # c = node2cluster[i]
-                # if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
-                # cluster2weights[c][j] += w
-            # else: 
-                # c = node2cluster[j]
-                # if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set1})
-                # cluster2weights[c][i] += w
 
         def logchoose(n,k):
             """
@@ -102,18 +89,20 @@ Source Code
 
         def C(B):
             """
-            constants in the description length (only depend on size B of partition)
+            constants in the description length (only depend on size B of partition):
+            log N1 + log C(N1-1,B-1) + log N1! + log multiset(N2*B, W), the log N1! being the numerator of the
+            multinomial coefficient N1!/prod_r n_r! that counts partitions with the given group sizes
             """
-            return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1) + logmultiset(N2*B,W)
+            return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1+1) + logmultiset(N2*B,W)
 
         def F(r):
             """
             cluster-level term in the description length
-            r is a cluster name
+            r is a cluster name; -log n_r! is cluster r's share of the multinomial denominator
             """
             nr = len(cluster2nodes[r])
             weights = cluster2weights[r]
-            return -loggamma(nr) + sum(logmultiset(nr,w) for w in weights.values())
+            return -loggamma(nr+1) + sum(logmultiset(nr,w) for w in weights.values())
 
         def merge_dF(r,s):
             """
@@ -122,7 +111,7 @@ Source Code
             bef = F(r) + F(s)
             nrs = len(cluster2nodes[r]) + len(cluster2nodes[s])
             weights = cluster2weights[r] + cluster2weights[s]
-            aft = -loggamma(nrs) + sum(logmultiset(nrs,w) for w in weights.values())
+            aft = -loggamma(nrs+1) + sum(logmultiset(nrs,w) for w in weights.values())
             return aft - bef
 
         past_merges = []
@@ -132,12 +121,12 @@ Source Code
                     dF = merge_dF(c1,c2)
                     heapq.heappush(past_merges,(dF,(c1,c2)))
 
-        H0 = C(N1) + sum(F(r) for r in cluster2nodes)
+        HN1 = C(N1) + sum(F(r) for r in cluster2nodes)
         Hs,past_partitions = [],[]
-        Hs.append(H0)
+        Hs.append(HN1)
         past_partitions.append(node2cluster.copy())
 
-        B,H = N1,H0
+        B,H = N1,HN1
         while B > 1:
 
             dF,pair = heapq.heappop(past_merges)
@@ -167,6 +156,8 @@ Source Code
             best_ind = np.argmin(Hs)
         else:
             best_ind = len(Hs)-fix_B
+
+        H0 = Hs[-1]
         Hmdl = Hs[best_ind]
         community_labels = past_partitions[best_ind]
         old_labels = list(set(community_labels.values()))
@@ -197,7 +188,7 @@ Source Code
             sub_Gs[community] = G_sub
 
     # Create the projected subgraphs for each community for tripartite network
-        
+
         if any(j.get('tripartite') == True for i, j in G.nodes(data=True)):
             sub_Gs_object = {}
             for i, g in sub_Gs.items():
@@ -205,18 +196,16 @@ Source Code
                 bipartite_attrs = list(set([j['bipartite'] for i, j in g.nodes(data=True)]))
                 combined_attr = None
                 student_attr = None
+                attr1, attr2 = "object1", "object2"
                 for attr in bipartite_attrs:
                     if isinstance(attr, str) and '(' in attr and ')' in attr and ',' in attr:
                         combined_attr = attr
                     else:
                         student_attr = attr
                 try:
-                    if combined_attr:
-                        attr1, attr2 = combined_attr.strip("()").split(",")
-                        attr1 = attr1.strip()
-                        attr2 = attr2.strip()
-                    else:
-                        attr1, attr2 = "object1", "object2"
+                    attr1, attr2 = combined_attr.strip("()").split(",")
+                    attr1 = attr1.strip()
+                    attr2 = attr2.strip()
                     pair_count = defaultdict(int)
                     for n in objects_objects:
                         if '**' in n[0]:
@@ -225,8 +214,8 @@ Source Code
                                 pair = (parts[0].strip(), parts[1].strip())
                                 pair_count[pair] += n[1]
                     w_edges = [(object1, object2, {'weight': count}) 
-                            for (object1, object2), count in pair_count.items() 
-                            if object1 != 'NA' and object2 != 'NA']
+                              for (object1, object2), count in pair_count.items() 
+                              if object1 != 'NA' and object2 != 'NA']
                     G_ = nx.Graph()
                     G_.add_edges_from(w_edges)
                     for node in G_.nodes():
@@ -234,7 +223,7 @@ Source Code
                             G_.nodes[node]['bipartite'] = attr1
                         else:
                             G_.nodes[node]['bipartite'] = attr2
-                            
+
                     sub_Gs_object[i] = G_
                 except Exception as e:
                     print(f"Error processing community {i}: {str(e)}")
@@ -242,11 +231,11 @@ Source Code
 
         if any(j.get('tripartite') == True for i, j in G.nodes(data=True)):
                 results = {'number of communities': len(set(community_labels.values())), \
-                "node communities": community_labels, "community structure quality value":1-Hmdl/H0,\
-                'updated graph object':G, 'sub graphs for each community':sub_Gs, 'object-object graphs for each community': sub_Gs_object}
+                   "node communities": community_labels, "community quality (compression ratio)":Hmdl/H0,\
+                   'updated graph object':G, 'sub graphs for each community':sub_Gs, 'object-object graphs for each community': sub_Gs_object}
         else:
             results = {'number of communities': len(set(community_labels.values())), \
-                "node communities": community_labels, "community structure quality value":Hmdl/H0,\
-                'updated graph object':G, 'sub graphs for each community':sub_Gs}
-        
+                   "node communities": community_labels, "community quality (compression ratio)":Hmdl/H0,\
+                   'updated graph object':G, 'sub graphs for each community':sub_Gs}
+
         return results

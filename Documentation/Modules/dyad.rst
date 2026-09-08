@@ -47,7 +47,7 @@ Prunes edges in a bipartite graph to retain only those that are statistically si
        <li>
            <span class="param-name">B</span>: A NetworkX graph representing a bipartite network with weighted edges.
            <ul>
-               <li>Nodes must have a <code>bipartite</code> attribute indicating their partition.</li>
+               <li>Every node must have a <code>bipartite</code> attribute indicating its partition; the two node sets (and hence <code>N_1</code>, <code>N_2</code> in the null model) are determined from this attribute, not from the order in which nodes or edges were added.</li>
            </ul>
        </li>
        <li>

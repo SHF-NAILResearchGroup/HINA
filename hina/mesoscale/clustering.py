@@ -4,8 +4,9 @@ import heapq
 import networkx as nx
 from collections import Counter
 from collections import defaultdict
+from hina.utils import split_node_sets
 
-def hina_communities(G,fix_B=None):
+def hina_communities(G,fix_B=None,focal=None):
 	"""
 	Identifies bipartite communities in a graph by optimizing a Minimum Description Length (MDL) objective.
 
@@ -22,6 +23,10 @@ def hina_communities(G,fix_B=None):
 	fix_B : int or str, optional
 		If specified, fixes the number of communities to this value. If `None`, the function automatically
 		determines the optimal number of communities. Default is `None`.
+	focal : hashable, optional
+		The value of the 'bipartite' attribute identifying the node set to cluster (e.g. 'student'). If `None`,
+		the non-tripartite node set is clustered for tripartite graphs, and otherwise the node set of the first
+		node in `G` (i.e. the set that was inserted first, as done by `get_bipartite`). Default is `None`.
 
 	Returns:
 	--------
@@ -38,21 +43,14 @@ def hina_communities(G,fix_B=None):
 		  are community labels and values are projected graphs representing relationships between objects
 		  within each community. 
 	"""
-	G_info = set([(i,j,w['weight'])for i,j,w in G.edges(data=True)])
+	# The clustered (focal) node set and the target node set are identified from the 'bipartite'
+	# node attribute, not from the position of each node in the edge tuples returned by networkx
+	# (that position reflects node insertion order, not node type). The focal set is the student
+	# set for tripartite graphs and otherwise the set of the first node in G, unless `focal` is given.
+	set1,set2 = split_node_sets(G, focal=focal)
+	# orient every edge as (focal node, target node, weight)
+	G_info = set([(i,j,w['weight']) if i in set1 else (j,i,w['weight']) for i,j,w in G.edges(data=True)])
 
-	v = set()
-	node_bipartite_list = [x for x in [data['bipartite'] for n, data in G.nodes(data=True)]\
-					 if not (x in v or v.add(x))]
-	# if fix_B == None:
-	#     set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-	#     print('set1,set2',set1,set2)
-	# elif fix_B == node_bipartite_list[0]:
-	#     set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-	# elif fix_B == node_bipartite_list[1]:
-	#     set2,set1 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-	set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-
-	
 	N1,N2 = len(set1),len(set2)
 	W = sum([e[2] for e in G_info])
 
@@ -64,14 +62,6 @@ def hina_communities(G,fix_B=None):
 		c = node2cluster[i]
 		if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
 		cluster2weights[c][j] += w
-		# if fix_B != node_bipartite_list[1]:
-		# 	c = node2cluster[i]
-		# 	if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
-		# 	cluster2weights[c][j] += w
-		# else: 
-		# 	c = node2cluster[j]
-		# 	if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set1})
-		# 	cluster2weights[c][i] += w
 
 	def logchoose(n,k):
 		"""
@@ -87,18 +77,20 @@ def hina_communities(G,fix_B=None):
 
 	def C(B):
 		"""
-		constants in the description length (only depend on size B of partition)
+		constants in the description length (only depend on size B of partition):
+		log N1 + log C(N1-1,B-1) + log N1! + log multiset(N2*B, W), the log N1! being the numerator of the
+		multinomial coefficient N1!/prod_r n_r! that counts partitions with the given group sizes
 		"""
-		return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1) + logmultiset(N2*B,W)
+		return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1+1) + logmultiset(N2*B,W)
 
 	def F(r):
 		"""
 		cluster-level term in the description length
-		r is a cluster name
+		r is a cluster name; -log n_r! is cluster r's share of the multinomial denominator
 		"""
 		nr = len(cluster2nodes[r])
 		weights = cluster2weights[r]
-		return -loggamma(nr) + sum(logmultiset(nr,w) for w in weights.values())
+		return -loggamma(nr+1) + sum(logmultiset(nr,w) for w in weights.values())
 
 	def merge_dF(r,s):
 		"""
@@ -107,7 +99,7 @@ def hina_communities(G,fix_B=None):
 		bef = F(r) + F(s)
 		nrs = len(cluster2nodes[r]) + len(cluster2nodes[s])
 		weights = cluster2weights[r] + cluster2weights[s]
-		aft = -loggamma(nrs) + sum(logmultiset(nrs,w) for w in weights.values())
+		aft = -loggamma(nrs+1) + sum(logmultiset(nrs,w) for w in weights.values())
 		return aft - bef
 
 	past_merges = []

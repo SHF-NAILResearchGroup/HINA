@@ -195,5 +195,38 @@ def test_prune_edges_extreme_alpha():
     result_edges = {(s, o, w) for s, o, w in result_one["significant edges"]}
     assert result_edges == expected_edges
     
+def test_prune_edges_threshold_uses_node_types_not_insertion_order():
+    # Regression test: the null model's success probability must be 1/(N1*N2) with N1, N2 the sizes of the
+    # two node *types* (from the 'bipartite' attribute), regardless of the order in which nodes were inserted.
+    # Before this test, N1 and N2 were read off the position of nodes in networkx edge tuples, which follows
+    # insertion order; for graphs whose two node sets are interleaved (e.g. the per-community projections
+    # returned by hina_communities on tripartite graphs) this mixed the sets and lowered the threshold.
+    import scipy.stats as stats
+    edges = [("code_A", "AI", 5), ("Peer", "code_B", 20), ("code_C", "Peer", 6), ("AI", "code_D", 4),
+             ("code_E", "Peer", 3), ("code_F", "AI", 2), ("Peer", "code_G", 8)]
+    G = nx.Graph()
+    G.add_weighted_edges_from(edges)            # nodes are created in edge order: types interleaved
+    for n in G.nodes():
+        G.nodes[n]["bipartite"] = "target" if n in ("AI", "Peer") else "code"
+    n_code, n_target, W = 7, 2, sum(w for _, _, w in edges)
+    threshold = stats.binom.ppf(0.95, W, 1.0 / (n_code * n_target))
+    expected = {(u, v, w) for u, v, w in edges if w >= threshold}
+    result = prune_edges(G, fix_deg="None", alpha=0.05)
+    assert result["significant edges"] == expected
+    # the same graph with the same edges in reversed tuple order must give the same answer
+    G_rev = nx.Graph()
+    G_rev.add_weighted_edges_from([(v, u, w) for u, v, w in reversed(edges)])
+    for n in G_rev.nodes():
+        G_rev.nodes[n]["bipartite"] = G.nodes[n]["bipartite"]
+    result_rev = prune_edges(G_rev, fix_deg="None", alpha=0.05)
+    assert {frozenset((u, v)) for u, v, _ in result_rev["significant edges"]} == \
+           {frozenset((u, v)) for u, v, _ in expected}
+
+def test_prune_edges_requires_bipartite_attribute():
+    G = nx.Graph()
+    G.add_weighted_edges_from([("Alice", "ask questions", 2), ("Bob", "evaluating", 1)])
+    with pytest.raises(ValueError):
+        prune_edges(G)
+
 if __name__ == "__main__":
     pytest.main()
