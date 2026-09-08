@@ -30,7 +30,7 @@ The method optimizes this MDL objective approximately using a fast agglomerative
 
    * - Function
      - Description
-   * - `hina_communities(G, fix_B=None) <#hina_communities>`_
+   * - `hina_communities(G, fix_B=None, focal=None) <#hina_communities>`_
      - Identifies bipartite/tripartite communities by optimizing the MDL objective.
 
 Reference
@@ -41,7 +41,7 @@ Reference
 .. raw:: html
 
    <div id="hina-communities" class="function-header">
-       <span class="class-name">function</span> <span class="function-name">hina_communities(G, fix_B=None)</span> 
+       <span class="class-name">function</span> <span class="function-name">hina_communities(G, fix_B=None, focal=None)</span> 
        <a href="../Code/clustering.html#hina-communities" class="source-link">[source]</a>
    </div>
 
@@ -53,7 +53,7 @@ Optimizes a Minimum Description Length (MDL) objective to identify communities i
 .. raw:: html
 
    <div class="parameter-block">
-       (G, fix_B=None)
+       (G, fix_B=None, focal=None)
    </div>
 
    <ul class="parameter-list">
@@ -61,6 +61,7 @@ Optimizes a Minimum Description Length (MDL) objective to identify communities i
            <span class="param-name">G</span>: A bipartite network represented as a NetworkX graph with weighted edges.
            <ul>
                <li>Edges are expected to be represented as tuples <code>(i, j, w)</code>, where <code>i</code> and <code>j</code> are node labels and <code>w</code> is a positive integer.</li>
+               <li>Every node must have a <code>bipartite</code> attribute indicating its node set, as written by <code>get_bipartite</code>/<code>get_tripartite</code>.</li>
            </ul>
        </li>
        <li>
@@ -69,6 +70,14 @@ Optimizes a Minimum Description Length (MDL) objective to identify communities i
            <ul>
                <li>If set to <code>None</code>, the algorithm automatically determines the optimal number of communities.</li>
                <li>If an integer is provided, the nodes will be partitioned into exactly that many communities.</li>
+           </ul>
+       </li>
+       <li>
+           <span class="param-name">focal</span>: (Optional) The value of the <code>bipartite</code> attribute identifying the node set to cluster (e.g. <code>'student'</code>).
+           <span class="default-value">Default: <code>None</code></span>.
+           <ul>
+               <li>If <code>None</code>, the non-tripartite node set is clustered for tripartite graphs; for bipartite graphs the node set of the first node in <code>G</code> is clustered (the student set for graphs built with <code>get_bipartite</code>).</li>
+               <li>The two node sets are always identified from the <code>bipartite</code> node attribute, never from the order in which nodes or edges were added to the graph.</li>
            </ul>
        </li>
    </ul>

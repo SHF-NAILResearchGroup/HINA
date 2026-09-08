@@ -1,3 +1,3 @@
-from .graph_tools import save_network
+from .graph_tools import save_network, split_node_sets
 
-__all__ = ['save_network']
+__all__ = ['save_network', 'split_node_sets']

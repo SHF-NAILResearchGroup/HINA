@@ -151,5 +151,75 @@ def test_hina_communities_tripartite():
 	assert bob_community == charlie_community  
 	assert alice_community != bob_community    
 
+def _description_length(G, labels, focal_attr):
+	# Reference implementation of the description length (Eq. for L(G,b) in the HINA paper), in nats:
+	# log N1 + log C(N1-1,B-1) + log[N1!/prod_r n_r!] + log multiset(B*N2, W) + sum_{r,j} log multiset(n_r, w_rj)
+	from scipy.special import loggamma
+	from collections import Counter
+	import numpy as np
+	def logchoose(n, k): return loggamma(n + 1) - loggamma(k + 1) - loggamma(n - k + 1)
+	def logmultiset(n, k): return logchoose(n + k - 1, k)
+	focal = [n for n, d in G.nodes(data=True) if d['bipartite'] == focal_attr]
+	targets = [n for n in G.nodes() if n not in focal]
+	N1, N2 = len(focal), len(targets)
+	W = sum(d['weight'] for _, _, d in G.edges(data=True))
+	groups = sorted(set(labels[n] for n in focal))
+	B = len(groups)
+	sizes = Counter(labels[n] for n in focal)
+	L = np.log(N1) + logchoose(N1 - 1, B - 1) + loggamma(N1 + 1) - sum(loggamma(sizes[g] + 1) for g in groups)
+	L += logmultiset(B * N2, W)
+	for g in groups:
+		for j in targets:
+			w = sum(G.edges[i, j]['weight'] for i in focal if labels[i] == g and G.has_edge(i, j))
+			L += logmultiset(sizes[g], w)
+	return L
+
+def test_compression_ratio_matches_description_length_formula():
+	# Regression test for the factorial terms of the description length: the code previously used
+	# loggamma(n) (= log (n-1)!) where the objective needs log n! = loggamma(n+1) in the multinomial term.
+	G = create_test_graph()
+	results = hina_communities(G)
+	labels = results['node communities']
+	trivial = {n: 0 for n in labels}
+	expected = _description_length(G, labels, 'student') / _description_length(G, trivial, 'student')
+	assert abs(results['community quality (compression ratio)'] - expected) < 1e-9
+
+def test_hina_communities_independent_of_node_insertion_order():
+	# The clustered node set must be identified from the 'bipartite' attribute, not from the order in
+	# which nodes/edges were inserted (previously a graph with object nodes inserted first raised KeyError
+	# or clustered the wrong node set). For plain bipartite graphs the set to cluster is the first-inserted
+	# one by default and can be chosen explicitly with `focal`.
+	G = create_test_graph()
+	G_rev = nx.Graph()
+	objects = [n for n, d in G.nodes(data=True) if d['bipartite'] == 'object']
+	students = [n for n, d in G.nodes(data=True) if d['bipartite'] == 'student']
+	G_rev.add_nodes_from(objects, bipartite='object')
+	G_rev.add_nodes_from(students, bipartite='student')
+	G_rev.add_weighted_edges_from([(v, u, d['weight']) for u, v, d in G.edges(data=True)])
+	r1, r2 = hina_communities(G), hina_communities(G_rev, focal='student')
+	assert set(r1['node communities']) == set(students)
+	assert r1['node communities'] == r2['node communities']
+	assert abs(r1['community quality (compression ratio)'] - r2['community quality (compression ratio)']) < 1e-12
+
+def test_tripartite_projection_pruning_uses_code_and_target_sets():
+	# The per-community code-target projections must be pruned with N1 = number of codes, N2 = number of targets.
+	from hina.dyad import prune_edges
+	import scipy.stats as stats
+	df = pd.DataFrame({
+		'student': ['S1'] * 6 + ['S2'] * 6 + ['S3'] * 3,
+		'code': ['ask', 'ask', 'ask', 'plan', 'ask', 'agree', 'ask', 'ask', 'ask', 'ask', 'plan', 'agree', 'greet', 'greet', 'plan'],
+		'target': ['AI', 'AI', 'AI', 'Peer', 'AI', 'Peer', 'AI', 'AI', 'AI', 'AI', 'Peer', 'Peer', 'Peer', 'Peer', 'AI'],
+	})
+	T = get_tripartite(df, student_col='student', object1_col='code', object2_col='target')
+	results = hina_communities(T, fix_B=1)
+	P = results['object-object graphs for each community'][0]
+	n_code = sum(1 for _, d in P.nodes(data=True) if d['bipartite'] == 'code')
+	n_target = sum(1 for _, d in P.nodes(data=True) if d['bipartite'] == 'target')
+	assert (n_code, n_target) == (4, 2)
+	W = sum(d['weight'] for _, _, d in P.edges(data=True))
+	threshold = stats.binom.ppf(0.95, W, 1.0 / (n_code * n_target))
+	expected = {(u, v, d['weight']) for u, v, d in P.edges(data=True) if d['weight'] >= threshold}
+	assert prune_edges(P)['significant edges'] == expected
+
 if __name__ == "__main__":
 	pytest.main()
