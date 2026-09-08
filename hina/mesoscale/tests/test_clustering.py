@@ -218,7 +218,7 @@ def test_tripartite_projection_pruning_uses_code_and_target_sets():
 	assert (n_code, n_target) == (4, 2)
 	W = sum(d['weight'] for _, _, d in P.edges(data=True))
 	threshold = stats.binom.ppf(0.95, W, 1.0 / (n_code * n_target))
-	expected = {(u, v, d['weight']) for u, v, d in P.edges(data=True) if d['weight'] >= threshold}
+	expected = {(u, v, d['weight']) for u, v, d in P.edges(data=True) if d['weight'] > threshold}
 	assert prune_edges(P)['significant edges'] == expected
 
 if __name__ == "__main__":

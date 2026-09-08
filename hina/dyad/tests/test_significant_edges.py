@@ -27,74 +27,73 @@ def create_test_bipartite():
     )
     return B
 
+def _expected_no_fixing(B, alpha):
+    # reference implementation of the default null model: W unit interactions placed uniformly over N1*N2 pairs;
+    # an edge is significant when its weight strictly exceeds the (1-alpha) quantile of Binomial(W, 1/(N1*N2))
+    from scipy import stats
+    sets = {}
+    for n, d in B.nodes(data=True):
+        sets.setdefault(d['bipartite'], set()).add(n)
+    N1, N2 = [len(v) for v in sets.values()]
+    W = sum(w for _, _, w in B.edges(data='weight'))
+    q = stats.binom.ppf(1 - alpha, W, 1.0 / (N1 * N2))
+    return {(u, v, w) for u, v, w in B.edges(data='weight') if w > q}
+
+def create_weighted_test_bipartite():
+    # The example from the documentation: 18 interactions, 3 students x 4 objects
+    df = pd.DataFrame({
+        'student': ['Alice', 'Bob', 'Alice', 'Charlie', 'Bob', 'Alice', 'Charlie', 'Alice', 'Bob', 'Alice', 'Charlie', 'Bob',
+                    'Charlie', 'Alice', 'Alice', 'Bob', 'Charlie', 'Bob'],
+        'object1': ['ask questions', 'answer questions', 'evaluating', 'monitoring', 'answer questions', 'ask questions',
+                    'evaluating', 'ask questions', 'answer questions', 'ask questions', 'monitoring', 'answer questions',
+                    'evaluating', 'monitoring', 'ask questions', 'ask questions', 'evaluating', 'monitoring'],
+        'attr': ['cognitive'] * 18,
+    })
+    return get_bipartite(df, student_col='student', object_col='object1', attr_col='attr')
+
 def test_prune_edges_no_fixing():
-    # Test prune_edges with no degree fixing
-    B = create_test_bipartite()
+    # Test prune_edges with no degree fixing on a graph with one clearly over-represented edge
+    B = create_weighted_test_bipartite()
     result = prune_edges(B, fix_deg='None', alpha=0.05)
-    
+
     assert isinstance(result, dict)
     assert "pruned network" in result
     assert "significant edges" in result
     assert isinstance(result["significant edges"], set)
-    
-    # Check if all edges from the original example are present
-    expected_edges = {
-        ('Alice', 'ask questions', 1), 
-        ('Alice', 'evaluating', 1),
-        ('Bob', 'answer questions', 1), 
-        ('Charlie', 'monitoring', 1)
-    }
-    
-    # Convert both to sets of tuples for comparison
+
     result_edges = {(s, o, w) for s, o, w in result["significant edges"]}
-    expected_edges_set = {(s, o, w) for s, o, w in expected_edges}
-    
-    assert result_edges == expected_edges_set
+    assert result_edges == _expected_no_fixing(B, 0.05)
+    # Alice-ask questions (5 of the 18 interactions on 12 possible pairs) is significant; weight-1 edges are not
+    assert ('Alice', 'ask questions', 5) in result_edges
+    assert all(w > 1 for _, _, w in result_edges)
+    # under the strict rule the null probability of every retained weight is below alpha
+    from scipy import stats
+    assert all(stats.binom.sf(w - 1, 18, 1.0 / 12) < 0.05 for _, _, w in result_edges)
 
 def test_prune_edges_fix_student():
     # Test prune_edges with fixed degrees for student nodes
-    B = create_test_bipartite()
+    B = create_weighted_test_bipartite()
     result = prune_edges(B, fix_deg='student', alpha=0.05)
-    
+
     assert "pruned network" in result
     assert "significant edges" in result
     assert isinstance(result["significant edges"], set)
-    
-    # Based on the example, with student degrees fixed, we expect a subset of edges
-    expected_subset = {
-        ('Bob', 'answer questions', 1),
-        ('Charlie', 'monitoring', 1)
-    }
-    
-    # Convert both to sets of tuples for comparison
-    result_edges = {(s, o, w) for s, o, w in result["significant edges"]}    
-    assert len(result_edges) <= 4
-    
-    # Check that the expected subset is contained in the result
-    for edge in expected_subset:
-        assert edge in result_edges
+
+    result_edges = {(s, o, w) for s, o, w in result["significant edges"]}
+    # Alice sent 5 of her 7 interactions to 'ask questions' and Bob 4 of his 6 to 'answer questions'
+    assert result_edges == {('Alice', 'ask questions', 5), ('Bob', 'answer questions', 4)}
 
 def test_prune_edges_fix_object():
     # Test prune_edges with fixed degrees for object nodes
-    B = create_test_bipartite()
+    B = create_weighted_test_bipartite()
     result = prune_edges(B, fix_deg='object1', alpha=0.05)
-    
+
     assert "pruned network" in result
     assert "significant edges" in result
-    
-    # Based on the example, with object degrees fixed, we expect all edges
-    expected_edges = {
-        ('Alice', 'ask questions', 1), 
-        ('Alice', 'evaluating', 1),
-        ('Bob', 'answer questions', 1), 
-        ('Charlie', 'monitoring', 1)
-    }
-    
-    # Convert both to sets of tuples for comparison
+
     result_edges = {(s, o, w) for s, o, w in result["significant edges"]}
-    expected_edges_set = {(s, o, w) for s, o, w in expected_edges}
-    
-    assert result_edges == expected_edges_set
+    # 'ask questions' received 5 of its 6 interactions from Alice and 'answer questions' all 4 of its interactions from Bob
+    assert result_edges == {('Alice', 'ask questions', 5), ('Bob', 'answer questions', 4)}
 
 def test_prune_edges_stricter_alpha():
     # Test prune_edges with a stricter significance level
@@ -106,36 +105,26 @@ def test_prune_edges_stricter_alpha():
     assert len(result["significant edges"]) <= 4
 
 def test_prune_edges_custom_weights():
-    # Test prune_edges with custom edge weights
+    # Test prune_edges with repeated rows producing edge weights > 1
     df = pd.DataFrame({
         'student': ['Alice', 'Bob', 'Alice', 'Alice', 'Bob'],
         'object1': ['ask questions', 'answer questions', 'ask questions', 'evaluating', 'evaluating'],
         'group': ['A', 'B', 'A', 'A', 'B'],
         'attr': ['cognitive', 'cognitive', 'cognitive', 'metacognitive', 'metacognitive']
     })
-    
-    B = get_bipartite(
-        df,
-        student_col='student',
-        object_col='object1',
-        attr_col='attr',
-        group_col='group'
-    )
-    
+    B = get_bipartite(df, student_col='student', object_col='object1', attr_col='attr', group_col='group')
+    assert B.edges['Alice', 'ask questions']['weight'] == 2
+
     result = prune_edges(B, fix_deg='None', alpha=0.05)
-    
     assert "pruned network" in result
     assert "significant edges" in result
-    
-    # Check if the weighted edge Alice-ask questions is significant
-    alice_ask = False
-    for edge in result["significant edges"]:
-        if edge[0] == 'Alice' and edge[1] == 'ask questions':
-            alice_ask = True
-            assert edge[2] == 2, "Expected weight of Alice-ask questions edge to be 2"
-            break
-    
-    assert alice_ask, "Edge ('Alice', 'ask questions') should be significant"
+    result_edges = {(s, o, w) for s, o, w in result["significant edges"]}
+    assert result_edges == _expected_no_fixing(B, 0.05)
+    # with only 5 interactions on 6 pairs no edge reaches significance at alpha = 0.05 ...
+    assert result_edges == set()
+    # ... but the weight-2 edge is the only one retained at a permissive level
+    lenient = {(s, o, w) for s, o, w in prune_edges(B, fix_deg='None', alpha=0.5)["significant edges"]}
+    assert lenient == {('Alice', 'ask questions', 2)}
 
 def test_prune_edges_empty_graph():
     # Test prune_edges with an empty graph with no edges
@@ -210,7 +199,7 @@ def test_prune_edges_threshold_uses_node_types_not_insertion_order():
         G.nodes[n]["bipartite"] = "target" if n in ("AI", "Peer") else "code"
     n_code, n_target, W = 7, 2, sum(w for _, _, w in edges)
     threshold = stats.binom.ppf(0.95, W, 1.0 / (n_code * n_target))
-    expected = {(u, v, w) for u, v, w in edges if w >= threshold}
+    expected = {(u, v, w) for u, v, w in edges if w > threshold}
     result = prune_edges(G, fix_deg="None", alpha=0.05)
     assert result["significant edges"] == expected
     # the same graph with the same edges in reversed tuple order must give the same answer

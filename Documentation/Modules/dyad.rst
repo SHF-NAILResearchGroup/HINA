@@ -33,7 +33,7 @@ Reference
    </div>
 
 **Description**:
-Prunes edges in a bipartite graph to retain only those that are statistically significant under a null model. The function uses a binomial significance test to compare each edge's weight against a threshold derived from the overall edge weight distribution or, when specified, the degree-constrained distribution for nodes whose degrees are fixed. This allows for flexible analysis of dyad-level interaction patterns.
+Prunes edges in a bipartite graph to retain only those that are statistically significant under a null model. The function uses a binomial significance test: an edge is retained when its weight strictly exceeds the (1-alpha) quantile of the null distribution of edge weights, derived from the overall edge weight distribution or, when specified, the degree-constrained distribution for nodes whose degrees are fixed, so that the null probability of a retained edge's weight is below alpha. This allows for flexible analysis of dyad-level interaction patterns.
 
 **Parameters**:
 
@@ -143,13 +143,13 @@ Example Output
 .. code-block:: console
 
     Significant Edges (No Degree Fixing): 
-    {('Bob', 'answer questions', 4), ('Alice', 'ask questions', 5)}
+    {('Alice', 'ask questions', 5)}
 
     Significant Edges (Fixing Degree for Student): 
-    {('Bob', 'answer questions', 4), ('Charlie', 'evaluating', 3), ('Alice', 'ask questions', 5)}
+    {('Bob', 'answer questions', 4), ('Alice', 'ask questions', 5)}
     
     Significant Edges (Fixing Degree for Object1): 
-    {('Bob', 'answer questions', 4), ('Charlie', 'monitoring', 2), ('Charlie', 'evaluating', 3), ('Alice', 'ask questions', 5)}
+    {('Bob', 'answer questions', 4), ('Alice', 'ask questions', 5)}
 
 Paper Source
 ============

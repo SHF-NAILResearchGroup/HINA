@@ -19,7 +19,8 @@ Source Code
         Prunes edges in a bipartite graph to retain only those that are statistically significant under a null model.
 
         This function identifies and retains edges whose weights are statistically significant based on a binomial distribution
-        under a null model. The null model can either fix the degrees of a specified node set (e.g., 'student', 'task') or assume
+        under a null model. An edge is retained when its weight strictly exceeds the (1-alpha) quantile of the null
+        distribution, i.e. when the null probability of a weight at least as large as the observed one is below alpha. The null model can either fix the degrees of a specified node set (e.g., 'student', 'task') or assume
         no fixed degrees. The significance level is controlled by the `alpha` parameter.
 
         Parameters:
@@ -34,8 +35,9 @@ Source Code
             This ensures the null model preserves the degree distribution of the specified node set.
             If 'None', no degrees are fixed, and the null model assumes random edge weights. Default is 'None'.
         alpha : float, optional
-            The significance level for determining statistical significance. Edges with weights below the threshold determined
-            by this value are pruned. Default is 0.05.
+            The significance level for determining statistical significance. Edges whose weight does not strictly exceed the
+            (1-alpha) quantile of the null distribution are pruned, so that the null probability of a retained edge's weight
+            is below alpha. Default is 0.05.
 
         Returns:
         --------
@@ -69,7 +71,7 @@ Source Code
             p = 1./(N1*N2) 
             weight_threshold = stats.binom.ppf(1-alpha, E, p) 
 
-            pruned_edges = set([e for e in G_info if e[-1] >= weight_threshold])
+            pruned_edges = set([e for e in G_info if e[-1] > weight_threshold])
 
         else:
             nodes = {i for i, attr in B.nodes(data=True) if attr.get('bipartite') == fix_deg}
@@ -87,12 +89,12 @@ Source Code
                 if i in nodes:
                     p = 1.0 / N_other  
                     threshold = stats.binom.ppf(1 - alpha, degs[i], p)
-                    if w >= threshold:
+                    if w > threshold:
                         pruned_edges.add((i, j, w))
                 elif j in nodes:
                     p = 1.0 / N_other
                     threshold = stats.binom.ppf(1 - alpha, degs[j], p)
-                    if w >= threshold:
+                    if w > threshold:
                         pruned_edges.add((i, j, w))
 
         Pruned_B = nx.Graph()    
