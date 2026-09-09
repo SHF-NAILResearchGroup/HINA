@@ -62,7 +62,7 @@ Source Code
             p = 1./(N1*N2) 
             weight_threshold = stats.binom.ppf(1-alpha, E, p) 
 
-            pruned_edges = set([e for e in G_info if e[-1] >= weight_threshold])
+            pruned_edges = set([e for e in G_info if e[-1] > weight_threshold])
 
         else:
             nodes = {i for i, attr in B.nodes(data=True) if attr.get('bipartite') == fix_deg}
@@ -80,12 +80,12 @@ Source Code
                 if i in nodes:
                     p = 1.0 / N_other  
                     threshold = stats.binom.ppf(1 - alpha, degs[i], p)
-                    if w >= threshold:
+                    if w > threshold:
                         pruned_edges.add((i, j, w))
                 elif j in nodes:
                     p = 1.0 / N_other
                     threshold = stats.binom.ppf(1 - alpha, degs[j], p)
-                    if w >= threshold:
+                    if w > threshold:
                         pruned_edges.add((i, j, w))
         
         Pruned_B = nx.Graph()    
@@ -96,4 +96,3 @@ Source Code
 
         results = {"pruned network": Pruned_B, "significant edges":pruned_edges}
         return results 
-
