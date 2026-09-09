@@ -104,7 +104,7 @@ def test_prune_edges_custom_weights():
     assert "pruned network" in result
     assert "significant edges" in result
     
-    # Its weight equals the threshold, so strict pruning excludes it.
+    # Its weight equals the threshold, so strict pruning excludes it
     assert ('Alice', 'ask questions', 2) not in result["significant edges"]
 
 def test_prune_edges_empty_graph():
