@@ -40,7 +40,8 @@ def prune_edges(B,fix_deg='None',alpha=0.05):
 
         return set(G_info)
 
-    set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
+    labels = [x for x in dict.fromkeys(d['bipartite'] for n,d in B.nodes(data=True))]
+    set1,set2 = {n for n,d in B.nodes(data=True) if d['bipartite']==labels[0]}, {n for n,d in B.nodes(data=True) if d['bipartite']==labels[1]}
     N1,N2 = len(set1),len(set2)
 
     if fix_deg in ["None", "none", "null", "undefined", "", None]:

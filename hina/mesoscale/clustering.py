@@ -50,20 +50,18 @@ def hina_communities(G,fix_B=None):
 	#     set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
 	# elif fix_B == node_bipartite_list[1]:
 	#     set2,set1 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-	set1,set2 = set([e[0] for e in G_info]),set([e[1] for e in G_info])
-
+	set1,set2 = {n for n,d in G.nodes(data=True) if d['bipartite']==node_bipartite_list[0]}, {n for n,d in G.nodes(data=True) if d['bipartite']==node_bipartite_list[1]}
 	
 	N1,N2 = len(set1),len(set2)
 	W = sum([e[2] for e in G_info])
 
 	cluster2nodes = {i:set([i]) for i in set1}
 	node2cluster = {i:i for i in set1}
-	cluster2weights = {}
-	for e in G_info:
-		i,j,w = e
-		c = node2cluster[i]
-		if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
-		cluster2weights[c][j] += w
+	cluster2weights = {c: Counter() for c in cluster2nodes}
+	for i, j, w in G_info:
+		if i not in set1:
+			i, j = j, i
+		cluster2weights[node2cluster[i]][j] += w
 		# if fix_B != node_bipartite_list[1]:
 		# 	c = node2cluster[i]
 		# 	if not(c in cluster2weights): cluster2weights[c] = Counter({k:0 for k in set2})
@@ -89,7 +87,7 @@ def hina_communities(G,fix_B=None):
 		"""
 		constants in the description length (only depend on size B of partition)
 		"""
-		return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1) + logmultiset(N2*B,W)
+		return np.log(N1) + logchoose(N1-1,B-1) + loggamma(N1+1) + logmultiset(N2*B,W)
 
 	def F(r):
 		"""
@@ -98,7 +96,7 @@ def hina_communities(G,fix_B=None):
 		"""
 		nr = len(cluster2nodes[r])
 		weights = cluster2weights[r]
-		return -loggamma(nr) + sum(logmultiset(nr,w) for w in weights.values())
+		return -loggamma(nr+1) + sum(logmultiset(nr,w) for w in weights.values())
 
 	def merge_dF(r,s):
 		"""
@@ -107,7 +105,7 @@ def hina_communities(G,fix_B=None):
 		bef = F(r) + F(s)
 		nrs = len(cluster2nodes[r]) + len(cluster2nodes[s])
 		weights = cluster2weights[r] + cluster2weights[s]
-		aft = -loggamma(nrs) + sum(logmultiset(nrs,w) for w in weights.values())
+		aft = -loggamma(nrs+1) + sum(logmultiset(nrs,w) for w in weights.values())
 		return aft - bef
 
 	past_merges = []
