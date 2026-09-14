@@ -1,6 +1,6 @@
 # `HINA`: A Learning Analytics Tool for `H`eterogeneous `I`nteraction `N`etwork `A`nalysis in Python 
 
-HINA is a learning analytics tool that models and analyzes heterogeneous interactions in learning processes. Heterogeneous interactions refer to the interactions occurring between different types of entities during learning processes, such as students’ interactions with learning objects or students’ display of different behaviors coded using multimodal process data. 
+HINA is a learning analytics tool that models and analyzes heterogeneous interactions in learning processes. Heterogeneous interactions refer to the interactions occurring between different types of entities during learning processes, such as students’ interactions with learning objects or their display of different behaviors coded using multimodal process data. 
 
 **Heterogeneous interaction networks (HINs)** consist of different sets of nodes and edges connecting nodes from different sets. Each node in a heterogeneous interaction network (HIN) can represent any meaningful entity reflecting a certain object or construct in a learning process, such as a student, group of students, coded behavior, or learning artefact. Edges in HINs pair nodes from different sets and can reflect affiliations, associations, or interactions among the nodes for modeling a specific learning process.
 
